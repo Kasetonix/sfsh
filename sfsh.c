@@ -6,9 +6,12 @@
 #define STR_INIT_SIZE 64
 #define STR_HEADER_SIZE (2 * sizeof(size_t) / sizeof(char))
 
-#define ERROR(msg) do { fputs("[ERR] " msg "\n", stderr); exit(EXIT_FAILURE); } while(0);
-#define STR_LEN_ADDR(str) ((size_t *) (str - STR_HEADER_SIZE))
-#define STR_CAP_ADDR(str) ((size_t *) (str - STR_HEADER_SIZE / 2))
+#define error(msg) do { fputs("[ERR] " msg "\n", stderr); exit(EXIT_FAILURE); } while(0)
+#define str_free(str) free(str - STR_HEADER_SIZE)
+#define str_len_addr(str) ((size_t *) (str - STR_HEADER_SIZE))
+#define str_cap_addr(str) ((size_t *) (str - STR_HEADER_SIZE / 2))
+#define str_len(str)      (*((size_t *) (str - STR_HEADER_SIZE)))
+#define str_cap(str)      (*((size_t *) (str - STR_HEADER_SIZE / 2)))
 
 typedef uint8_t u8;
 typedef int8_t i8;
@@ -17,9 +20,6 @@ typedef uint64_t u64;
 
 char *str_alloc();
 char *str_realloc(char *str, size_t new_size);
-size_t str_len(char *str);
-size_t str_cap(char *str);
-void str_free(char *str);
 void str_getline(char **str);
 
 int main(void) {
@@ -49,25 +49,13 @@ char *str_realloc(char *str, size_t new_size) {
     return str + STR_HEADER_SIZE;
 }
 
-size_t str_len(char *str) {
-    return *STR_LEN_ADDR(str);
-}
-
-size_t str_cap(char *str) {
-    return *STR_CAP_ADDR(str);
-}
-
-void str_free(char *str) {
-    free(str - STR_HEADER_SIZE);
-}
-
 void str_getline(char **str) {
     i32 ch;
     size_t len, cap;
 
     len = 0;
     cap = str_cap(*str);
-    memset(*str, 0, len);
+    memset(*str, 0, len + 1);
 
     while (1) {
         ch = getchar();
@@ -82,12 +70,12 @@ void str_getline(char **str) {
             cap *= 2;
             *str = str_realloc(*str, cap);
             if (*str == NULL)
-                ERROR("Failed to allocate memory for a string.");
+                error("Failed to allocate memory for a string.");
         }
 
         len++;
     }
 
-    *STR_LEN_ADDR(*str) = len;
-    *STR_CAP_ADDR(*str) = cap;
+    *str_len_addr(*str) = len;
+    *str_cap_addr(*str) = cap;
 }
