@@ -18,7 +18,7 @@ typedef struct {
 
 #define error(msg) do { fputs("[ERR] " msg "\n", stderr); exit(EXIT_FAILURE); } while(0)
 
-#define str_header(str)   (((StrHeader *) str) - 1)
+#define str_header(str)   (((StrHeader *) (str)) - 1)
 #define str_length(str)   str_header(str)->length
 #define str_capacity(str) str_header(str)->capacity
 #define str_free(str)     free(str_header(str))
